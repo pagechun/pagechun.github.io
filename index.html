@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网站导航</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .website-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: relative;
+        }
+        
+        /* 提示信息样式 */
+        .screenshot-tip {
+            font-size: 12px; /* 小字体 */
+            color: #666;
+            background-color: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+        }
+        
+        .screenshot-tip::before {
+            content: "ℹ️";
+            margin-right: 8px;
+            font-size: 14px;
+        }
+        
+        .open-btn {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: 500;
+            width: 100%;
+            cursor: pointer;
+            margin-bottom: 15px;
+            transition: transform 0.2s ease;
+        }
+        
+        .open-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .url-container {
+            display: flex;
+            align-items: center;
+            background: #f0f2f5;
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+        }
+        
+        .url-text {
+            flex-grow: 1;
+            font-size: 14px;
+            color: #555;
+            word-break: break-all;
+        }
+        
+        .copy-btn {
+            background: none;
+            border: none;
+            color: #4f46e5;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 5px 10px;
+            margin-left: 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+        }
+        
+        .copy-btn:active {
+            background-color: rgba(79, 70, 229, 0.1);
+        }
+        
+        .screenshot {
+            width: 100%;
+            border-radius: 8px;
+            border: 1px solid #eee;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .toast.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="website-card">
+            <button class="open-btn">打开网站</button>
+            
+            <div class="url-container">
+                <span class="url-text" id="urlText">https://www.example.com</span>
+                <button class="copy-btn" id="copyBtn">复制</button>
+            </div>
+            
+            <!-- 添加的提示信息 -->
+            <div class="screenshot-tip">
+                推荐点击右上角或复制网址在浏览器打开哦
+            </div>
+            
+            <img src="your-screenshot.jpg" alt="/gushi.jpg" class="screenshot">
+        </div>
+    </div>
+    
+    <div class="toast" id="toast">链接已复制</div>
+    
+    <script>
+        // 打开网站按钮功能
+        document.querySelector('.open-btn').addEventListener('click', function() {
+            window.open('https://www.example.com', '_blank');
+        });
+        
+        // 复制网址功能
+        document.getElementById('copyBtn').addEventListener('click', function() {
+            const url = document.getElementById('urlText').textContent;
+            
+            // 使用现代Clipboard API
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(url).then(function() {
+                    showToast('链接已复制');
+                }).catch(function(err) {
+                    console.error('复制失败:', err);
+                    fallbackCopy(url);
+                });
+            } else {
+                // 兼容旧浏览器
+                fallbackCopy(url);
+            }
+        });
+        
+        // 兼容旧浏览器的复制方法
+        function fallbackCopy(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';  // 防止页面滚动
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast('链接已复制');
+                } else {
+                    showToast('复制失败，请手动复制');
+                }
+            } catch (err) {
+                console.error('复制失败:', err);
+                showToast('复制失败，请手动复制');
+            }
+            
+            document.body.removeChild(textarea);
+        }
+        
+        // 显示提示信息
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(function() {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
